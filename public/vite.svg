@@ -1,0 +1,63 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <!-- Adding glow filter -->
+        <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+            <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+        </filter>
+
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#3cffAC;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#4b78A0;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="grad2" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#2B86C5;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#4b78A0;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+
+    <!-- Background -->
+    <rect width="400" height="400" fill="transparent" />
+
+    <!-- Enhanced geometric shapes -->
+    <g transform="translate(0, 60) rotate(45, 200, 200)" filter="url(#glow)">
+        <!-- Main triangle (More Centered and Scaled) -->
+        <path d="M80,80 L320,80 L200,320 Z" fill="url(#grad1)" opacity="0.9">
+            <animate attributeName="d"
+                dur="4s"
+                repeatCount="indefinite"
+                values="M80,80 L320,80 L200,320 Z;
+                         M70,70 L330,70 L200,330 Z;
+                         M80,80 L320,80 L200,320 Z" />
+        </path>
+
+        <!-- Additional decorative elements (More Centered and Scaled) -->
+        <path d="M90,90 L310,90 L200,310 Z"
+            fill="none"
+            stroke="url(#grad2)"
+            stroke-width="1"
+            opacity="0.5">
+            <animate attributeName="d"
+                dur="3s"
+                repeatCount="indefinite"
+                values="M90,90 L310,90 L200,310 Z;
+                         M80,80 L320,80 L200,320 Z;
+                         M90,90 L310,90 L200,310 Z" />
+        </path>
+    </g>
+
+    <!-- Overlapping shapes with glow (More Centered and Scaled) -->
+    <g transform="rotate(-45, 200, 200) translate(0, 40)" filter="url(#glow)">
+        <path d="M100,50 L300,50 L200,250 Z" fill="url(#grad2)" opacity="0.8">
+            <animate attributeName="d"
+                dur="3s"
+                repeatCount="indefinite"
+                values="M100,50 L300,50 L200,250 Z;
+                         M90,40 L310,40 L200,260 Z;
+                         M100,50 L300,50 L200,250 Z" />
+        </path>
+    </g>
+</svg>
