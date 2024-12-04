@@ -1,19 +1,28 @@
 import { Canvas } from "@react-three/fiber";
 import { IDE } from "./widgets/ide";
-import vertexShader from "@/shaders/sample/vertex.glsl";
-import fragmentShader from "@/shaders/sample/fragment.glsl";
 import { Plane } from "@react-three/drei";
 import { useConfig } from "./store/config";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "./components/ui/tooltip";
 import { List, MonitorPlay } from "lucide-react";
+import { useData } from "./store/data";
+import * as THREE from "three";
 
 export const App: React.FC = () => {
   const { colors } = useConfig();
+  const mainTexture = useData((state) => state.mainTexture);
+  const materialRef = useRef<THREE.MeshBasicMaterial>(null);
+
+  useEffect(() => {
+    if (materialRef.current && mainTexture) {
+      materialRef.current.map = mainTexture;
+      materialRef.current.needsUpdate = true;
+    }
+  }, [mainTexture]);
 
   const styleColors = useMemo(() => {
     return {
@@ -35,10 +44,7 @@ export const App: React.FC = () => {
         camera={{ left: 0, right: 1, top: 1, bottom: 0, near: 0.1, far: 100 }}
       >
         <Plane position={[0.5, 0.5, 0]}>
-          <shaderMaterial
-            vertexShader={vertexShader}
-            fragmentShader={fragmentShader}
-          />
+          <meshBasicMaterial ref={materialRef} map={mainTexture} />
         </Plane>
       </Canvas>
       <div className="absolute inset-0 bg-black/80 backdrop-blur-lg z-10" />

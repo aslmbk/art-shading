@@ -1,7 +1,8 @@
 import { useRef, useEffect } from "react";
 import { Plane } from "@react-three/drei";
 import * as THREE from "three";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useData } from "@/store/data";
 
 interface Props {
   vertexShader: string;
@@ -10,6 +11,41 @@ interface Props {
 
 export const Scene: React.FC<Props> = ({ vertexShader, fragmentShader }) => {
   const shaderMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const setMainTexture = useData((state) => state.setMainTexture);
+  const { viewport, gl, scene, camera } = useThree();
+
+  useEffect(() => {
+    const array = new Uint8Array(viewport.width * viewport.height * 4);
+    const renderTarget = new THREE.WebGLRenderTarget(
+      viewport.width,
+      viewport.height
+    );
+    const texture = new THREE.DataTexture(
+      array,
+      viewport.width,
+      viewport.height,
+      THREE.RGBAFormat,
+      THREE.UnsignedByteType
+    );
+    const cb = () => {
+      gl.setRenderTarget(renderTarget);
+      gl.render(scene, camera);
+      gl.readRenderTargetPixels(
+        renderTarget,
+        0,
+        0,
+        viewport.width,
+        viewport.height,
+        array
+      );
+      texture.image.data.set(array);
+      texture.needsUpdate = true;
+      setMainTexture(texture);
+      gl.setRenderTarget(null);
+    };
+    const interval = setInterval(cb, 100);
+    return () => clearInterval(interval);
+  }, [gl, viewport, setMainTexture, scene, camera]);
 
   useFrame(({ clock, viewport, gl, pointer }) => {
     if (shaderMaterialRef.current) {

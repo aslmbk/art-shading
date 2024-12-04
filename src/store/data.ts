@@ -8,9 +8,10 @@ interface State {
     vertexShader: string;
     fragmentShader: string;
   };
-  mainTexture: THREE.Texture;
+  mainTexture: THREE.DataTexture | null;
   updateVertexShader: (shader: string) => void;
   updateFragmentShader: (shader: string) => void;
+  setMainTexture: (texture: THREE.DataTexture) => void;
 }
 
 export const useData = create<State>((set) => ({
@@ -18,7 +19,7 @@ export const useData = create<State>((set) => ({
     vertexShader,
     fragmentShader,
   },
-  mainTexture: new THREE.Texture(),
+  mainTexture: null,
   updateVertexShader: (shader) =>
     set((state) => ({
       current: { ...state.current, vertexShader: shader },
@@ -27,4 +28,5 @@ export const useData = create<State>((set) => ({
     set((state) => ({
       current: { ...state.current, fragmentShader: shader },
     })),
+  setMainTexture: (texture) => set({ mainTexture: texture }),
 }));
