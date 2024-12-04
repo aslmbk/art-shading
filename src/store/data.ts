@@ -11,7 +11,7 @@ interface State {
   updateFragmentShader: (shader: string) => void;
 }
 
-export const useStore = create<State>((set) => ({
+export const useData = create<State>((set) => ({
   current: {
     vertexShader,
     fragmentShader,

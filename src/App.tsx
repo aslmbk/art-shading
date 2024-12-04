@@ -20,7 +20,7 @@ export const App: React.FC = () => {
         </Plane>
       </Canvas>
       <div className="absolute inset-0 bg-black/90 backdrop-blur-lg z-10" />
-      <IDE className="absolute z-20 top-[5%] left-[5%] w-[90%] h-[90%]" />
+      <IDE className="absolute z-20 top-10 bottom-10 left-20 right-20" />
     </div>
   );
 };
