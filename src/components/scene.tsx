@@ -34,23 +34,21 @@ export const Scene: React.FC<Props> = ({ vertexShader, fragmentShader }) => {
   }, [vertexShader, fragmentShader]);
 
   return (
-    <>
-      <Plane position={[0.5, 0.5, 0]}>
-        <shaderMaterial
-          ref={shaderMaterialRef}
-          vertexShader={vertexShader}
-          fragmentShader={fragmentShader}
-          uniforms={{
-            uTime: new THREE.Uniform(0),
-            uResolution: new THREE.Uniform(new THREE.Vector2()),
-            uMouse: new THREE.Uniform(new THREE.Vector2()),
-            uTexture1: new THREE.Uniform(null),
-            uTexture2: new THREE.Uniform(null),
-            uTexture3: new THREE.Uniform(null),
-            uTexture4: new THREE.Uniform(null),
-          }}
-        />
-      </Plane>
-    </>
+    <Plane position={[0.5, 0.5, 0]}>
+      <shaderMaterial
+        ref={shaderMaterialRef}
+        vertexShader={vertexShader}
+        fragmentShader={fragmentShader}
+        uniforms={{
+          uTime: new THREE.Uniform(0),
+          uResolution: new THREE.Uniform(new THREE.Vector2()),
+          uMouse: new THREE.Uniform(new THREE.Vector2()),
+          uTexture1: new THREE.Uniform(null),
+          uTexture2: new THREE.Uniform(null),
+          uTexture3: new THREE.Uniform(null),
+          uTexture4: new THREE.Uniform(null),
+        }}
+      />
+    </Plane>
   );
 };
