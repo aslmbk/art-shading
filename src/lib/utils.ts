@@ -41,3 +41,12 @@ export const getBrightness = (hexColor: string): number => {
   // Perceived brightness formula (ITU-R BT.709)
   return (r * 0.2126 + g * 0.7152 + b * 0.0722) / 255;
 };
+
+export const fileToBase64 = (file: File) => {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+};

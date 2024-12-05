@@ -1,8 +1,22 @@
-import { useRef, useEffect } from "react";
+import { useEffect } from "react";
 import { Plane } from "@react-three/drei";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useData } from "@/store/data";
+
+const textureLoader = new THREE.TextureLoader();
+
+const shaderMaterial = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime: new THREE.Uniform(0),
+    uResolution: new THREE.Uniform(new THREE.Vector2()),
+    uMouse: new THREE.Uniform(new THREE.Vector2()),
+    uTexture1: new THREE.Uniform(null),
+    uTexture2: new THREE.Uniform(null),
+    uTexture3: new THREE.Uniform(null),
+    uTexture4: new THREE.Uniform(null),
+  },
+});
 
 interface Props {
   vertexShader: string;
@@ -10,8 +24,8 @@ interface Props {
 }
 
 export const Scene: React.FC<Props> = ({ vertexShader, fragmentShader }) => {
-  const shaderMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const setMainTexture = useData((state) => state.setMainTexture);
+  const image1 = useData((state) => state.image1);
   const { viewport, gl, scene, camera } = useThree();
 
   useEffect(() => {
@@ -44,47 +58,41 @@ export const Scene: React.FC<Props> = ({ vertexShader, fragmentShader }) => {
       gl.setRenderTarget(null);
     };
     const interval = setInterval(cb, 100);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      renderTarget.dispose();
+      texture.dispose();
+    };
   }, [gl, viewport, setMainTexture, scene, camera]);
 
-  useFrame(({ clock, viewport, gl, pointer }) => {
-    if (shaderMaterialRef.current) {
-      shaderMaterialRef.current.uniforms.uTime.value = clock.getElapsedTime();
-      shaderMaterialRef.current.uniforms.uResolution.value = new THREE.Vector2(
-        viewport.width * gl.getPixelRatio(),
-        viewport.height * gl.getPixelRatio()
-      );
-      shaderMaterialRef.current.uniforms.uMouse.value = new THREE.Vector2(
-        pointer.x,
-        pointer.y
-      );
+  useEffect(() => {
+    if (image1.url) {
+      textureLoader.load(image1.url, (texture) => {
+        const uniform = shaderMaterial.uniforms.uTexture1;
+        if (uniform.value) uniform.value.dispose();
+        uniform.value = texture;
+        shaderMaterial.needsUpdate = true;
+      });
     }
+  }, [image1.url]);
+
+  useFrame(({ clock, viewport, gl, pointer }) => {
+    shaderMaterial.uniforms.uTime.value = clock.getElapsedTime();
+    shaderMaterial.uniforms.uResolution.value = new THREE.Vector2(
+      viewport.width * gl.getPixelRatio(),
+      viewport.height * gl.getPixelRatio()
+    );
+    shaderMaterial.uniforms.uMouse.value = new THREE.Vector2(
+      pointer.x,
+      pointer.y
+    );
   });
 
   useEffect(() => {
-    if (shaderMaterialRef.current) {
-      shaderMaterialRef.current.vertexShader = vertexShader;
-      shaderMaterialRef.current.fragmentShader = fragmentShader;
-      shaderMaterialRef.current.needsUpdate = true;
-    }
+    shaderMaterial.vertexShader = vertexShader;
+    shaderMaterial.fragmentShader = fragmentShader;
+    shaderMaterial.needsUpdate = true;
   }, [vertexShader, fragmentShader]);
 
-  return (
-    <Plane position={[0.5, 0.5, 0]}>
-      <shaderMaterial
-        ref={shaderMaterialRef}
-        vertexShader={vertexShader}
-        fragmentShader={fragmentShader}
-        uniforms={{
-          uTime: new THREE.Uniform(0),
-          uResolution: new THREE.Uniform(new THREE.Vector2()),
-          uMouse: new THREE.Uniform(new THREE.Vector2()),
-          uTexture1: new THREE.Uniform(null),
-          uTexture2: new THREE.Uniform(null),
-          uTexture3: new THREE.Uniform(null),
-          uTexture4: new THREE.Uniform(null),
-        }}
-      />
-    </Plane>
-  );
+  return <Plane position={[0.5, 0.5, 0]} material={shaderMaterial} />;
 };

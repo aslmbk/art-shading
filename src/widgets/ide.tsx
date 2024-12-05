@@ -47,28 +47,23 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Textures } from "@/components/textures";
-import { useFPS } from "@/hooks/useFPS";
+import { FPSMeter } from "@/components/fps-meter";
 
 export const IDE: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   className,
   ...props
 }) => {
-  const {
-    current: { vertexShader, fragmentShader },
-    updateVertexShader,
-    updateFragmentShader,
-  } = useData();
-  const {
-    theme,
-    tabSize,
-    setTabSize,
-    fontSize,
-    setFontSize,
-    setTheme,
-    colors,
-  } = useConfig();
-
-  const stats = useFPS();
+  const vertexShader = useData((state) => state.current.vertexShader);
+  const fragmentShader = useData((state) => state.current.fragmentShader);
+  const updateVertexShader = useData((state) => state.updateVertexShader);
+  const updateFragmentShader = useData((state) => state.updateFragmentShader);
+  const theme = useConfig((state) => state.theme);
+  const tabSize = useConfig((state) => state.tabSize);
+  const fontSize = useConfig((state) => state.fontSize);
+  const setTabSize = useConfig((state) => state.setTabSize);
+  const setFontSize = useConfig((state) => state.setFontSize);
+  const setTheme = useConfig((state) => state.setTheme);
+  const colors = useConfig((state) => state.colors);
 
   const [fileName, setFileName] = useState<"fragment" | "vertex" | "textures">(
     "fragment"
@@ -444,9 +439,7 @@ export const IDE: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
         </ResizablePanel>
         <ResizableHandle withHandle className="bg-[var(--color-border)]" />
         <ResizablePanel className="relative">
-          <div className="absolute top-0 right-0 text-xs z-10 bg-black opacity-10 text-[var(--color-text)] hover:opacity-90 px-2 py-0.5">
-            fps: {stats}
-          </div>
+          <FPSMeter className="absolute top-0 right-0 z-10 bg-black opacity-10 text-[var(--color-text)] hover:opacity-90 px-2 py-0.5" />
           <Canvas
             orthographic
             camera={{
