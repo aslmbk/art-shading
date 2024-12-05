@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Plane } from "@react-three/drei";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useData } from "@/store/data";
+import { FileType, useData } from "@/store/data";
 
 const textureLoader = new THREE.TextureLoader();
 
@@ -18,14 +18,31 @@ const shaderMaterial = new THREE.ShaderMaterial({
   },
 });
 
-interface Props {
-  vertexShader: string;
-  fragmentShader: string;
-}
+const updateTexture = (
+  uniform: THREE.IUniform<THREE.Texture | null>,
+  image: FileType
+) => {
+  if (image.url) {
+    textureLoader.load(image.url, (texture) => {
+      if (uniform.value) uniform.value.dispose();
+      uniform.value = texture;
+      shaderMaterial.needsUpdate = true;
+    });
+  } else {
+    if (uniform.value) uniform.value.dispose();
+    uniform.value = null;
+    shaderMaterial.needsUpdate = true;
+  }
+};
 
-export const Scene: React.FC<Props> = ({ vertexShader, fragmentShader }) => {
+export const Scene: React.FC = () => {
   const setMainTexture = useData((state) => state.setMainTexture);
   const image1 = useData((state) => state.image1);
+  const image2 = useData((state) => state.image2);
+  const image3 = useData((state) => state.image3);
+  const image4 = useData((state) => state.image4);
+  const vertexShader = useData((state) => state.current.vertexShader);
+  const fragmentShader = useData((state) => state.current.fragmentShader);
   const { viewport, gl, scene, camera } = useThree();
 
   useEffect(() => {
@@ -66,15 +83,20 @@ export const Scene: React.FC<Props> = ({ vertexShader, fragmentShader }) => {
   }, [gl, viewport, setMainTexture, scene, camera]);
 
   useEffect(() => {
-    if (image1.url) {
-      textureLoader.load(image1.url, (texture) => {
-        const uniform = shaderMaterial.uniforms.uTexture1;
-        if (uniform.value) uniform.value.dispose();
-        uniform.value = texture;
-        shaderMaterial.needsUpdate = true;
-      });
-    }
-  }, [image1.url]);
+    updateTexture(shaderMaterial.uniforms.uTexture1, image1);
+  }, [image1]);
+
+  useEffect(() => {
+    updateTexture(shaderMaterial.uniforms.uTexture2, image2);
+  }, [image2]);
+
+  useEffect(() => {
+    updateTexture(shaderMaterial.uniforms.uTexture3, image3);
+  }, [image3]);
+
+  useEffect(() => {
+    updateTexture(shaderMaterial.uniforms.uTexture4, image4);
+  }, [image4]);
 
   useFrame(({ clock, viewport, gl, pointer }) => {
     shaderMaterial.uniforms.uTime.value = clock.getElapsedTime();

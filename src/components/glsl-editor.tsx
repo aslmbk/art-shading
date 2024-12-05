@@ -7,6 +7,9 @@ import {
   CompletionContext,
   CompletionResult,
 } from "@codemirror/autocomplete";
+import { useData } from "@/store/data";
+import { useConfig } from "@/store/config";
+import { useEffect } from "react";
 
 function extractVariables(code: string) {
   const variables: Array<{ name: string; type: string }> = [];
@@ -62,12 +65,21 @@ const glslFunctions = [
   "greaterThan", "greaterThanEqual", "inversesqrt", "length", "lessThan", "lessThanEqual",
   "log", "log2", "matrixCompMult", "max", "min", "mix", "mod", "normalize", "not", "notEqual",
   "outerProduct", "pow", "radians", "reflect", "refract", "round", "roundEven", "sign", "sin",
-  "sinh", "smoothstep", "sqrt", "step", "tan", "tanh", "transpose", "trunc"
+  "sinh", "smoothstep", "sqrt", "step", "tan", "tanh", "transpose", "trunc", "texture2D", "texture"
 ];
+
+const exceptSymbols = [";", "(", ")", "{", "}", "[", "]", ",", "."];
 
 function glslCompletions(context: CompletionContext): CompletionResult | null {
   const word = context.matchBefore(/\w*/);
-  if (!word) return null;
+  if (
+    !word ||
+    exceptSymbols.includes(
+      context.state.doc.sliceString(word.from - 1, word.from)
+    )
+  ) {
+    return null;
+  }
 
   const doc = context.state.doc.toString();
   const variables = extractVariables(doc);
@@ -108,33 +120,85 @@ function glslCompletions(context: CompletionContext): CompletionResult | null {
   };
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
+export const formatCode = (fileType: "vertex" | "fragment") => {
+  const vertexShader = useData.getState().current.vertexShader;
+  const fragmentShader = useData.getState().current.fragmentShader;
+  const updateVertexShader = useData.getState().updateVertexShader;
+  const updateFragmentShader = useData.getState().updateFragmentShader;
+  const tabSize = useConfig.getState().tabSize;
+  const code = fileType === "vertex" ? vertexShader : fragmentShader;
+  const update =
+    fileType === "vertex" ? updateVertexShader : updateFragmentShader;
+
+  const lines = code.split("\n").map((line) => line.trim());
+  let indentLevel = 0;
+
+  // Filter out consecutive empty lines
+  const filteredLines: string[] = [];
+  let lastLineEmpty = false;
+
+  lines.forEach((line) => {
+    const isEmpty = line.length === 0;
+    if (!(isEmpty && lastLineEmpty)) {
+      filteredLines.push(line);
+    }
+    lastLineEmpty = isEmpty;
+  });
+
+  const formattedLines = filteredLines.map((line) => {
+    if (line.startsWith("}")) indentLevel = Math.max(0, indentLevel - 1);
+    const indented = " ".repeat(indentLevel * tabSize) + line;
+    if (line.endsWith("{")) indentLevel++;
+    return indented;
+  });
+
+  const formatted = formattedLines.join("\n");
+  if (formatted !== code) update(formatted);
+};
+
 interface GLSLEditorProps {
-  value: string;
-  onChange: (value: string | undefined) => void;
-  theme: keyof typeof themes;
-  tabSize: 2 | 4;
-  fontSize: number;
+  fileType: "vertex" | "fragment";
 }
 
-export const GLSLEditor: React.FC<GLSLEditorProps> = ({
-  value,
-  onChange,
-  theme,
-  tabSize,
-  fontSize,
-}) => {
+export const GLSLEditor: React.FC<GLSLEditorProps> = ({ fileType }) => {
+  const vertexShader = useData((state) => state.current.vertexShader);
+  const fragmentShader = useData((state) => state.current.fragmentShader);
+  const updateVertexShader = useData((state) => state.updateVertexShader);
+  const updateFragmentShader = useData((state) => state.updateFragmentShader);
+  const theme = useConfig((state) => state.theme);
+  const tabSize = useConfig((state) => state.tabSize);
+  const fontSize = useConfig((state) => state.fontSize);
+
+  useEffect(() => {
+    formatCode(fileType);
+  }, [tabSize, fileType]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "F" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
+        e.preventDefault();
+        formatCode(fileType);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [fileType]);
+
   return (
     <CodeMirror
       className="absolute inset-0"
       style={{ fontSize: `${fontSize}px` }}
-      value={value}
+      value={fileType === "vertex" ? vertexShader : fragmentShader}
       height="100%"
       theme={themes[theme]}
       extensions={[
         StreamLanguage.define(shader),
         autocompletion({ override: [glslCompletions] }),
       ]}
-      onChange={onChange}
+      onChange={
+        fileType === "vertex" ? updateVertexShader : updateFragmentShader
+      }
       basicSetup={{
         tabSize,
         lineNumbers: true,

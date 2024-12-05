@@ -22,12 +22,12 @@ interface State {
 }
 
 const getColors = (color: string) => {
-  const textColor = getBrightness(color) > 0.5 ? "#000000" : "#ffffff";
+  const brightness = getBrightness(color);
   return {
     main: color,
     secondary: lightenColor(color, -32),
     border: lightenColor(color, 32),
-    text: textColor,
+    text: brightness > 0.5 ? "#000000" : "#ffffff",
   };
 };
 

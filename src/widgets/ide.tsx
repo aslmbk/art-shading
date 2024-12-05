@@ -6,10 +6,9 @@ import {
 import { cn } from "@/lib/utils";
 import { Scene } from "@/components/scene";
 import { Canvas } from "@react-three/fiber";
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { Separator } from "@/components/ui/separator";
-import { useData } from "@/store/data";
-import { GLSLEditor } from "@/components/glsl-editor";
+import { formatCode, GLSLEditor } from "@/components/glsl-editor";
 import { useConfig } from "@/store/config";
 import { codeSnippets, themes } from "@/lib/constants";
 import {
@@ -53,10 +52,6 @@ export const IDE: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   className,
   ...props
 }) => {
-  const vertexShader = useData((state) => state.current.vertexShader);
-  const fragmentShader = useData((state) => state.current.fragmentShader);
-  const updateVertexShader = useData((state) => state.updateVertexShader);
-  const updateFragmentShader = useData((state) => state.updateFragmentShader);
   const theme = useConfig((state) => state.theme);
   const tabSize = useConfig((state) => state.tabSize);
   const fontSize = useConfig((state) => state.fontSize);
@@ -65,18 +60,10 @@ export const IDE: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   const setTheme = useConfig((state) => state.setTheme);
   const colors = useConfig((state) => state.colors);
 
-  const [fileName, setFileName] = useState<"fragment" | "vertex" | "textures">(
+  const [fileType, setFileType] = useState<"fragment" | "vertex" | "textures">(
     "fragment"
   );
   const [copiedSnippet, setCopiedSnippet] = useState<string>("");
-  const value =
-    fileName === "vertex"
-      ? vertexShader
-      : fileName === "fragment"
-      ? fragmentShader
-      : "";
-  const updateValue =
-    fileName === "vertex" ? updateVertexShader : updateFragmentShader;
 
   const styleColors = useMemo(() => {
     return {
@@ -86,53 +73,6 @@ export const IDE: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
       "--color-text": colors.text,
     } as React.CSSProperties;
   }, [colors]);
-
-  const format = useCallback(() => {
-    const text = value;
-    const lines = text.split("\n").map((line) => line.trim());
-    let indentLevel = 0;
-
-    // Filter out consecutive empty lines
-    const filteredLines: string[] = [];
-    let lastLineEmpty = false;
-
-    lines.forEach((line) => {
-      const isEmpty = line.length === 0;
-      if (!(isEmpty && lastLineEmpty)) {
-        filteredLines.push(line);
-      }
-      lastLineEmpty = isEmpty;
-    });
-
-    const formattedLines = filteredLines.map((line) => {
-      if (line.startsWith("}")) indentLevel = Math.max(0, indentLevel - 1);
-      const indented = " ".repeat(indentLevel * tabSize) + line;
-      if (line.endsWith("{")) indentLevel++;
-      return indented;
-    });
-
-    const formatted = formattedLines.join("\n");
-    if (formatted !== text) {
-      updateValue(formatted);
-    }
-  }, [tabSize, updateValue, value]);
-
-  useEffect(() => {
-    format();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabSize, fileName]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "F" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
-        e.preventDefault();
-        format();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [format]);
 
   return (
     <div
@@ -152,10 +92,10 @@ export const IDE: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
                   "text-xs text-[var(--color-text)] bg-[var(--color-secondary)] font-normal h-8 px-2 leading-8 cursor-pointer border-b border-[var(--color-border)]",
                   {
                     "bg-[var(--color-main)] border-[var(--color-main)] cursor-default":
-                      fileName === "vertex",
+                      fileType === "vertex",
                   }
                 )}
-                onClick={() => setFileName("vertex")}
+                onClick={() => setFileType("vertex")}
               >
                 vertex.glsl
               </div>
@@ -168,10 +108,10 @@ export const IDE: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
                   "text-xs text-[var(--color-text)] bg-[var(--color-secondary)] font-normal h-8 px-2 leading-8 cursor-pointer border-b border-[var(--color-border)]",
                   {
                     "bg-[var(--color-main)] border-[var(--color-main)] cursor-default":
-                      fileName === "fragment",
+                      fileType === "fragment",
                   }
                 )}
-                onClick={() => setFileName("fragment")}
+                onClick={() => setFileType("fragment")}
               >
                 fragment.glsl
               </div>
@@ -184,10 +124,10 @@ export const IDE: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
                   "text-xs text-[var(--color-text)] bg-[var(--color-secondary)] font-normal h-8 px-2 leading-8 cursor-pointer border-b border-[var(--color-border)]",
                   {
                     "bg-[var(--color-main)] border-[var(--color-main)] cursor-default":
-                      fileName === "textures",
+                      fileType === "textures",
                   }
                 )}
-                onClick={() => setFileName("textures")}
+                onClick={() => setFileType("textures")}
               >
                 textures
               </div>
@@ -202,7 +142,7 @@ export const IDE: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
               <Tooltip disableHoverableContent>
                 <TooltipTrigger
                   className="w-8 h-8 rounded-none hover:bg-[var(--color-main)] border border-[var(--color-border)] border-t-0"
-                  onClick={format}
+                  onClick={() => formatCode(fileType as "vertex" | "fragment")}
                 >
                   <ChartNoAxesGantt
                     className="stroke-[var(--color-text)] m-auto"
@@ -424,16 +364,10 @@ export const IDE: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
           </div>
 
           <div className="relative grow">
-            {fileName === "textures" ? (
+            {fileType === "textures" ? (
               <Textures className="absolute inset-0 bg-[var(--color-main)]" />
             ) : (
-              <GLSLEditor
-                value={value}
-                onChange={(value) => updateValue(value ?? "")}
-                theme={theme}
-                tabSize={tabSize}
-                fontSize={fontSize}
-              />
+              <GLSLEditor fileType={fileType} />
             )}
           </div>
         </ResizablePanel>
@@ -451,10 +385,7 @@ export const IDE: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
               far: 100,
             }}
           >
-            <Scene
-              vertexShader={vertexShader}
-              fragmentShader={fragmentShader}
-            />
+            <Scene />
           </Canvas>
         </ResizablePanel>
       </ResizablePanelGroup>

@@ -3,7 +3,7 @@ import vertexShader from "@/shaders/sample/vertex.glsl";
 import fragmentShader from "@/shaders/sample/fragment.glsl";
 import * as THREE from "three";
 
-type FileType = {
+export type FileType = {
   file: File | null;
   url: string;
 };
@@ -26,7 +26,7 @@ interface State {
   updateVertexShader: (shader: string) => void;
   updateFragmentShader: (shader: string) => void;
   setMainTexture: (texture: THREE.DataTexture) => void;
-  setImage: (file: File, index: number) => void;
+  setImage: (file: File | null, index: number) => void;
 }
 
 export const useData = create<State>((set) => ({
