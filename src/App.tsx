@@ -21,11 +21,15 @@ import {
   DialogTrigger,
 } from "./components/ui/dialog";
 import { Authorization } from "./components/authorization";
+import { useAuth } from "./context/auth-context";
 
 export const App: React.FC = () => {
   const { colors } = useConfig();
   const mainTexture = useData((state) => state.mainTexture);
   const materialRef = useRef<THREE.MeshBasicMaterial>(null);
+
+  const { isAuthenticated, user } = useAuth();
+  const adminMode = isAuthenticated && user?.token;
 
   const [showList, setShowList] = useState(false);
 
@@ -123,9 +127,11 @@ export const App: React.FC = () => {
             style={styleColors}
           >
             <DialogHeader>
-              <DialogTitle>Authorization</DialogTitle>
+              <DialogTitle>
+                {adminMode ? "You are administrator" : "Authorization"}
+              </DialogTitle>
               <DialogDescription>
-                Administrator login and password
+                {adminMode ? "" : "Administrator login and password"}
               </DialogDescription>
             </DialogHeader>
             <Authorization />
