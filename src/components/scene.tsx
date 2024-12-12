@@ -41,8 +41,8 @@ export const Scene: React.FC = () => {
   const image2 = useData((state) => state.image2);
   const image3 = useData((state) => state.image3);
   const image4 = useData((state) => state.image4);
-  const vertexShader = useData((state) => state.current.vertexShader);
-  const fragmentShader = useData((state) => state.current.fragmentShader);
+  const vertexShader = useData((state) => state.current.vertex);
+  const fragmentShader = useData((state) => state.current.fragment);
   const { viewport, gl, scene, camera } = useThree();
 
   useEffect(() => {
@@ -111,8 +111,8 @@ export const Scene: React.FC = () => {
   });
 
   useEffect(() => {
-    shaderMaterial.vertexShader = vertexShader;
-    shaderMaterial.fragmentShader = fragmentShader;
+    shaderMaterial.vertexShader = vertexShader!;
+    shaderMaterial.fragmentShader = fragmentShader!;
     shaderMaterial.needsUpdate = true;
   }, [vertexShader, fragmentShader]);
 

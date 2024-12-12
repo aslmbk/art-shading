@@ -22,6 +22,7 @@ import {
 } from "./components/ui/dialog";
 import { Authorization } from "./components/authorization";
 import { useAuth } from "./context/auth-context";
+import { useFetchData } from "./hooks/useFetchData";
 
 export const App: React.FC = () => {
   const { colors } = useConfig();
@@ -32,6 +33,8 @@ export const App: React.FC = () => {
   const adminMode = isAuthenticated && user?.token;
 
   const [showList, setShowList] = useState(false);
+
+  useFetchData();
 
   useEffect(() => {
     if (materialRef.current && mainTexture) {
@@ -111,7 +114,7 @@ export const App: React.FC = () => {
           <Tooltip disableHoverableContent>
             <TooltipTrigger asChild>
               <DialogTrigger className="mb-4 rounded-full w-10 h-10 bg-[var(--color-main)] text-[var(--color-text)] flex items-center justify-center cursor-pointer">
-                G
+                {adminMode ? "A" : "G"}
               </DialogTrigger>
             </TooltipTrigger>
             <TooltipContent
@@ -122,7 +125,7 @@ export const App: React.FC = () => {
             </TooltipContent>
           </Tooltip>
           <DialogContent
-            className="w-fit !rounded-none bg-[var(--color-secondary)] border-[var(--color-border)] text-[var(--color-text)]"
+            className="w-96 !rounded-none bg-[var(--color-secondary)] border-[var(--color-border)] text-[var(--color-text)]"
             closeClassName="text-[var(--color-text)] hover:bg-[var(--color-main)] rounded-none border-0 focus:ring-0 focus:ring-offset-0"
             style={styleColors}
           >

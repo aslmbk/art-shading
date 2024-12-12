@@ -122,8 +122,8 @@ function glslCompletions(context: CompletionContext): CompletionResult | null {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const formatCode = (fileType: "vertex" | "fragment") => {
-  const vertexShader = useData.getState().current.vertexShader;
-  const fragmentShader = useData.getState().current.fragmentShader;
+  const vertexShader = useData.getState().current.vertex;
+  const fragmentShader = useData.getState().current.fragment;
   const updateVertexShader = useData.getState().updateVertexShader;
   const updateFragmentShader = useData.getState().updateFragmentShader;
   const tabSize = useConfig.getState().tabSize;
@@ -131,7 +131,7 @@ export const formatCode = (fileType: "vertex" | "fragment") => {
   const update =
     fileType === "vertex" ? updateVertexShader : updateFragmentShader;
 
-  const lines = code.split("\n").map((line) => line.trim());
+  const lines = code!.split("\n").map((line) => line.trim());
   let indentLevel = 0;
 
   // Filter out consecutive empty lines
@@ -162,8 +162,8 @@ interface GLSLEditorProps {
 }
 
 export const GLSLEditor: React.FC<GLSLEditorProps> = ({ fileType }) => {
-  const vertexShader = useData((state) => state.current.vertexShader);
-  const fragmentShader = useData((state) => state.current.fragmentShader);
+  const vertexShader = useData((state) => state.current.vertex);
+  const fragmentShader = useData((state) => state.current.fragment);
   const updateVertexShader = useData((state) => state.updateVertexShader);
   const updateFragmentShader = useData((state) => state.updateFragmentShader);
   const theme = useConfig((state) => state.theme);
@@ -189,7 +189,7 @@ export const GLSLEditor: React.FC<GLSLEditorProps> = ({ fileType }) => {
     <CodeMirror
       className="absolute inset-0"
       style={{ fontSize: `${fontSize}px` }}
-      value={fileType === "vertex" ? vertexShader : fragmentShader}
+      value={fileType === "vertex" ? vertexShader! : fragmentShader!}
       height="100%"
       theme={themes[theme]}
       extensions={[
